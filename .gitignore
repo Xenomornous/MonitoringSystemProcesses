@@ -1,0 +1,12 @@
+# Foldery kompilacji
+**/bin/
+**/obj/
+
+# Visual Studio
+**/.vs/
+*.user
+*.suo
+
+# Pliki tymczasowe
+*.log
+*.tmp
