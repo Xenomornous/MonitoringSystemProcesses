@@ -13,30 +13,34 @@
         <StackPanel>
 
             <TextBlock Text="CPU Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
-            <ProgressBar x:Name="CpuProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
-            <TextBlock x:Name="CpuText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
+            <ProgressBar x:Name="CpuProgressBar" HorizontalAlignment="Left" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="CpuText" FontSize="10" TextAlignment="Left" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
 
             <TextBlock Text="RAM Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
-            <ProgressBar x:Name="RamProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
-            <TextBlock x:Name="RamText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
+            <ProgressBar x:Name="RamProgressBar" HorizontalAlignment="Left" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="RamText" FontSize="10" TextAlignment="Left" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
 
             <TextBlock Text="Disk Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
-            <ProgressBar x:Name="DiskProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
-            <TextBlock x:Name="DiskText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
+            <ProgressBar x:Name="DiskProgressBar" HorizontalAlignment="Left" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="DiskText" FontSize="10" TextAlignment="Left" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
 
             <TextBlock Text="Network Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
             <TextBlock x:Name="NetText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray"/>
 
-            <!-- Nowy TextBox pod paskami, wyrównany do prawej -->
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,1,36,0">
+            <!-- Sekcja komend -->
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,1,70,0">
                 <TextBlock Text="Input:" FontSize="10" Foreground="White" Margin="0,0,0,2"/>
-                <TextBox x:Name="InputTextBox" Width="100" Height="15" 
-             Background="#01000000" Foreground="White" BorderBrush="LightGray"/>
-                <!-- Błędy pod TextBoxem -->
-                <TextBlock x:Name="ErrorText" FontSize="8" Foreground="Red" Margin="0,2,0,0"/>
+                <TextBox x:Name="InputTextBox" Width="100" Height="15"
+                         Background="#01000000" Foreground="White" BorderBrush="LightGray"/>
+                <TextBlock x:Name="ErrorText" Width="100" FontSize="8" TextWrapping="Wrap"
+                           TextAlignment="Left" Foreground="Red" Margin="0,2,0,0" Height="70"/>
             </StackPanel>
+        </StackPanel>
 
-
+        <!-- 🔹 Liczba procesów w lewym dolnym rogu -->
+        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,80">
+            <TextBlock Text="Liczba procesów:" FontSize="10" Foreground="White" />
+            <TextBlock x:Name="ProcessCountText" FontSize="10" Foreground="LightGray"/>
         </StackPanel>
     </Grid>
 </Window>

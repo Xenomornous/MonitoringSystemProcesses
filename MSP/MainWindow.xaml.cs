@@ -93,8 +93,8 @@ namespace MSP
             Loaded += (_, _) =>
             {
                 var screen = SystemParameters.WorkArea;
-                Left = screen.Right - Width - 15;
-                Top = screen.Top + 25;
+                Left = screen.Right - Width + 55;
+                Top = screen.Top + 10;
 
                 Topmost = false;
                 ShowInTaskbar = false; // nie pokazuje w pasku zadań
@@ -180,6 +180,23 @@ namespace MSP
                 return;
             }
 
+            // INFO:
+            if (input.Equals("INFO", StringComparison.OrdinalIgnoreCase))
+            {
+                if (commands.Count > 0)
+                {
+                    string infoOutput = "Dostępne komendy: INFO, NEW:, DELETE: . Komendy do aktualizacji GIT repo projektów: " + string.Join(", ", commands.Keys);
+                    ErrorText.Text = infoOutput;
+                }
+                else
+                {
+                    ErrorText.Text = "Brak zdefiniowanych komend.";
+                }
+
+                InputTextBox.Clear();
+                return;
+            }
+
             // Uruchomienie normalnej komendy
             string cmdKey = input.ToUpper();
             if (commands.ContainsKey(cmdKey))
@@ -249,6 +266,16 @@ namespace MSP
                 float sent = netSentCounter.NextValue() / 1024;
                 float received = netReceivedCounter.NextValue() / 1024;
                 NetText.Text = $"↑ {sent:F0} KB/s | ↓ {received:F0} KB/s";
+            }
+
+            try
+            {
+                int processCount = Process.GetProcesses().Length;
+                ProcessCountText.Text = processCount.ToString();
+            }
+            catch
+            {
+                ProcessCountText.Text = "Błąd";
             }
         }
 
