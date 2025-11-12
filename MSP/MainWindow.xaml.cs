@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using WinForms = System.Windows.Forms; // alias, aby uniknąć konfliktu
 
 namespace MSP
 {
@@ -25,6 +26,7 @@ namespace MSP
         private Dictionary<string, string> commands = new();
         private string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
         private FileSystemWatcher jsonWatcher;
+        private WinForms.NotifyIcon trayIcon;
 
         [StructLayout(LayoutKind.Sequential)]
         struct FILETIME { public uint dwLowDateTime; public uint dwHighDateTime; }
@@ -54,15 +56,23 @@ namespace MSP
         {
             InitializeComponent();
 
+            // Załaduj komendy
             LoadCommands();
 
-            // FileSystemWatcher, dynamiczne odczytywanie JSON w czasie rzeczywistym
+            // FileSystemWatcher - dynamiczna aktualizacja JSON
             jsonWatcher = new FileSystemWatcher(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
             jsonWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName;
             jsonWatcher.Changed += (s, e) => Dispatcher.Invoke(LoadCommands);
             jsonWatcher.Created += (s, e) => Dispatcher.Invoke(LoadCommands);
             jsonWatcher.EnableRaisingEvents = true;
 
+            // Tray Icon
+            //trayIcon = new WinForms.NotifyIcon();
+            //trayIcon.Icon = new System.Drawing.Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("MSP.icon.ico"));
+            //trayIcon.Visible = true;
+            //trayIcon.Text = "MSP Monitor";
+
+            // CPU / RAM / Disk / Network
             GetCpuTimes(out prevIdleTime, out prevKernelTime, out prevUserTime);
 
             diskCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
@@ -85,11 +95,11 @@ namespace MSP
                 var screen = SystemParameters.WorkArea;
                 Left = screen.Right - Width - 15;
                 Top = screen.Top + 25;
+
                 Topmost = false;
-                ShowInTaskbar = false;
+                ShowInTaskbar = false; // nie pokazuje w pasku zadań
             };
 
-            // Obsługa Enter w TextBoxie
             InputTextBox.KeyDown += InputTextBox_KeyDown;
         }
 
@@ -105,9 +115,7 @@ namespace MSP
                         commands = loaded;
                 }
                 else
-                {
                     commands = new Dictionary<string, string>();
-                }
             }
             catch
             {
@@ -122,23 +130,19 @@ namespace MSP
                 string json = JsonSerializer.Serialize(commands, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(jsonPath, json);
             }
-            catch
-            {
-                // ignorujemy błędy zapisu
-            }
+            catch { }
         }
 
-        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            ErrorText.Text = ""; // czyści błąd przy każdej próbie
+            ErrorText.Text = "";
 
             if (e.Key != Key.Enter) return;
 
             string input = InputTextBox.Text.Trim();
-
             if (string.IsNullOrEmpty(input)) return;
 
-            // Obsługa NEW: i DELETE:
+            // NEW:
             if (input.StartsWith("NEW:", StringComparison.OrdinalIgnoreCase))
             {
                 string cmdName = input.Substring(4).Trim().ToUpper();
@@ -157,6 +161,7 @@ namespace MSP
                 return;
             }
 
+            // DELETE:
             if (input.StartsWith("DELETE:", StringComparison.OrdinalIgnoreCase))
             {
                 string cmdName = input.Substring(7).Trim().ToUpper();
@@ -175,13 +180,13 @@ namespace MSP
                 return;
             }
 
-            // Normalna komenda do uruchomienia
+            // Uruchomienie normalnej komendy
             string cmdKey = input.ToUpper();
             if (commands.ContainsKey(cmdKey))
             {
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string ppsaFolder = Path.Combine(desktopPath, "PPSA"); // folder PPSA na pulpicie
-                string scriptPath = Path.Combine(ppsaFolder, commands[cmdKey]); // ścieżka do skryptu w PPSA
+                string ppsaFolder = Path.Combine(desktopPath, "PPSA");
+                string scriptPath = Path.Combine(ppsaFolder, commands[cmdKey]);
 
                 ProcessStartInfo psi = new ProcessStartInfo()
                 {
@@ -257,9 +262,9 @@ namespace MSP
 
         private void SetProgressBarColor(System.Windows.Controls.ProgressBar bar, double value)
         {
-            if (value < 50) bar.Foreground = Brushes.LightGreen;
-            else if (value < 85) bar.Foreground = Brushes.Yellow;
-            else bar.Foreground = Brushes.Red;
+            if (value < 50) bar.Foreground = System.Windows.Media.Brushes.LightGreen;
+            else if (value < 85) bar.Foreground = System.Windows.Media.Brushes.Yellow;
+            else bar.Foreground = System.Windows.Media.Brushes.Red;
         }
     }
 }
