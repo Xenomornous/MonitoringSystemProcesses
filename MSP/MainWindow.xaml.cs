@@ -67,8 +67,8 @@ namespace MSP
             Loaded += (_, _) =>
             {
                 var screen = SystemParameters.WorkArea;
-                Left = screen.Right - Width - 20;
-                Top = screen.Top + 20;
+                Left = screen.Right - Width - 15;
+                Top = screen.Top + 25;
                 Topmost = false;
                 ShowInTaskbar = false;
             };

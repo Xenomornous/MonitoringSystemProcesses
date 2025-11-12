@@ -28,12 +28,10 @@
             <TextBlock x:Name="NetText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray"/>
 
             <!-- Nowy TextBox pod paskami, wyrównany do prawej -->
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,1,0,0">
-                <TextBlock Text="Input:" FontSize="8" Foreground="White" Margin="0,0,0,2"/>
-                <TextBox x:Name="InputTextBox" Width="100" Height="20"
-         Background="#01000000" Foreground="White" BorderBrush="LightGray"
-         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-         Padding="0"/>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,1,36,0">
+                <TextBlock Text="Input:" FontSize="10" Foreground="White" Margin="0,0,0,2"/>
+                <TextBox x:Name="InputTextBox" Width="100" Height="15" 
+             Background="#01000000" Foreground="White" BorderBrush="LightGray"/>
             </StackPanel>
 
 
