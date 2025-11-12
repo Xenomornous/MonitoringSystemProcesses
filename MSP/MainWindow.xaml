@@ -6,25 +6,35 @@
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
-        Width="400" Height="350"
-        Topmost="True">
+        Width="300" Height="300"
+        Topmost="False">
 
-    <Border CornerRadius="15" Background="Transparent" Padding="15">
+    <Grid Margin="5">
         <StackPanel>
-            <TextBlock Text="CPU Usage:" FontWeight="Bold" FontSize="14" Foreground="White"/>
-            <ProgressBar x:Name="CpuProgressBar" Height="25" Minimum="0" Maximum="100"/>
-            <TextBlock x:Name="CpuText" FontSize="12" Margin="0,0,0,10" Foreground="LightGray"/>
 
-            <TextBlock Text="RAM Usage:" FontWeight="Bold" FontSize="14" Foreground="White"/>
-            <ProgressBar x:Name="RamProgressBar" Height="25" Minimum="0" Maximum="100"/>
-            <TextBlock x:Name="RamText" FontSize="12" Margin="0,0,0,10" Foreground="LightGray"/>
+            <TextBlock Text="CPU Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
+            <ProgressBar x:Name="CpuProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="CpuText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
 
-            <TextBlock Text="Disk Usage:" FontWeight="Bold" FontSize="14" Foreground="White"/>
-            <ProgressBar x:Name="DiskProgressBar" Height="25" Minimum="0" Maximum="100"/>
-            <TextBlock x:Name="DiskText" FontSize="12" Margin="0,0,0,10" Foreground="LightGray"/>
+            <TextBlock Text="RAM Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
+            <ProgressBar x:Name="RamProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="RamText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
 
-            <TextBlock Text="Network Usage:" FontWeight="Bold" FontSize="14" Foreground="White"/>
-            <TextBlock x:Name="NetText" FontSize="12" Margin="0,0,0,10" Foreground="LightGray"/>
+            <TextBlock Text="Disk Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
+            <ProgressBar x:Name="DiskProgressBar" Width="220" Height="12" Minimum="0" Maximum="100" Background="Transparent"/>
+            <TextBlock x:Name="DiskText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray" Height="15"/>
+
+            <TextBlock Text="Network Usage:" FontWeight="Bold" FontSize="12" Margin="0,0,0,2" Foreground="White"/>
+            <TextBlock x:Name="NetText" FontSize="10" Margin="0,0,0,4" Foreground="LightGray"/>
+
+            <!-- Nowy TextBox pod paskami, wyrównany do prawej -->
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,1,0,0">
+                <TextBlock Text="Input:" FontSize="10" Foreground="White" Margin="0,0,0,2"/>
+                <TextBox x:Name="InputTextBox" Width="100" Height="15" 
+             Background="#01000000" Foreground="White" BorderBrush="LightGray"/>
+            </StackPanel>
+
+
         </StackPanel>
-    </Border>
+    </Grid>
 </Window>
