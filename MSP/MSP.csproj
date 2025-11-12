@@ -8,12 +8,21 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <None Remove="commands.json" />
+	</ItemGroup>
+
 	<!-- Dodanie referencji do Forms i Drawing -->
 	<ItemGroup>
 		<Reference Include="System.Windows.Forms" />
 		<Reference Include="System.Drawing" />
 		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
 		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Resource Include="commands.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -18,6 +21,10 @@ namespace MSP
         private PerformanceCounter diskCounter;
         private PerformanceCounter? netSentCounter;
         private PerformanceCounter? netReceivedCounter;
+
+        private Dictionary<string, string> commands = new();
+        private string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
+        private FileSystemWatcher jsonWatcher;
 
         [StructLayout(LayoutKind.Sequential)]
         struct FILETIME { public uint dwLowDateTime; public uint dwHighDateTime; }
@@ -46,6 +53,15 @@ namespace MSP
         public MainWindow()
         {
             InitializeComponent();
+
+            LoadCommands();
+
+            // FileSystemWatcher, dynamiczne odczytywanie JSON w czasie rzeczywistym
+            jsonWatcher = new FileSystemWatcher(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
+            jsonWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName;
+            jsonWatcher.Changed += (s, e) => Dispatcher.Invoke(LoadCommands);
+            jsonWatcher.Created += (s, e) => Dispatcher.Invoke(LoadCommands);
+            jsonWatcher.EnableRaisingEvents = true;
 
             GetCpuTimes(out prevIdleTime, out prevKernelTime, out prevUserTime);
 
@@ -77,23 +93,93 @@ namespace MSP
             InputTextBox.KeyDown += InputTextBox_KeyDown;
         }
 
-        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void LoadCommands()
         {
-            if (e.Key == Key.Enter)
+            try
             {
-                string input = InputTextBox.Text.Trim().ToUpper(); // ignoruje wielkość liter
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string scriptPath = string.Empty;
-
-                if (input == "EDR")
-                    scriptPath = System.IO.Path.Combine(desktopPath, "EDR.ps1");
-                else if (input == "MSP")
-                    scriptPath = System.IO.Path.Combine(desktopPath, "MSP.ps1");
+                if (File.Exists(jsonPath))
+                {
+                    string json = File.ReadAllText(jsonPath);
+                    var loaded = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                    if (loaded != null)
+                        commands = loaded;
+                }
                 else
                 {
-                    MessageBox.Show("Nieznana komenda!");
-                    return;
+                    commands = new Dictionary<string, string>();
                 }
+            }
+            catch
+            {
+                commands = new Dictionary<string, string>();
+            }
+        }
+
+        private void SaveCommands()
+        {
+            try
+            {
+                string json = JsonSerializer.Serialize(commands, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(jsonPath, json);
+            }
+            catch
+            {
+                // ignorujemy błędy zapisu
+            }
+        }
+
+        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            ErrorText.Text = ""; // czyści błąd przy każdej próbie
+
+            if (e.Key != Key.Enter) return;
+
+            string input = InputTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(input)) return;
+
+            // Obsługa NEW: i DELETE:
+            if (input.StartsWith("NEW:", StringComparison.OrdinalIgnoreCase))
+            {
+                string cmdName = input.Substring(4).Trim().ToUpper();
+                if (!string.IsNullOrEmpty(cmdName))
+                {
+                    if (!commands.ContainsKey(cmdName))
+                    {
+                        commands[cmdName] = cmdName + ".ps1";
+                        SaveCommands();
+                        ErrorText.Text = $"Dodano {cmdName}";
+                    }
+                    else
+                        ErrorText.Text = $"Komenda {cmdName} już istnieje";
+                }
+                InputTextBox.Clear();
+                return;
+            }
+
+            if (input.StartsWith("DELETE:", StringComparison.OrdinalIgnoreCase))
+            {
+                string cmdName = input.Substring(7).Trim().ToUpper();
+                if (!string.IsNullOrEmpty(cmdName))
+                {
+                    if (commands.ContainsKey(cmdName))
+                    {
+                        commands.Remove(cmdName);
+                        SaveCommands();
+                        ErrorText.Text = $"Usunięto {cmdName}";
+                    }
+                    else
+                        ErrorText.Text = $"Nie znaleziono {cmdName}";
+                }
+                InputTextBox.Clear();
+                return;
+            }
+
+            // Normalna komenda do uruchomienia
+            string cmdKey = input.ToUpper();
+            if (commands.ContainsKey(cmdKey))
+            {
+                string scriptPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), commands[cmdKey]);
 
                 ProcessStartInfo psi = new ProcessStartInfo()
                 {
@@ -108,11 +194,15 @@ namespace MSP
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Błąd uruchamiania skryptu: {ex.Message}");
+                    ErrorText.Text = $"Błąd uruchamiania skryptu: {ex.Message}";
                 }
-
-                InputTextBox.Clear(); // czyści pole po Enterze
             }
+            else
+            {
+                ErrorText.Text = $"Nieznana komenda: {input}";
+            }
+
+            InputTextBox.Clear();
         }
 
         private void Timer_Tick(object? sender, EventArgs e)

@@ -32,6 +32,8 @@
                 <TextBlock Text="Input:" FontSize="10" Foreground="White" Margin="0,0,0,2"/>
                 <TextBox x:Name="InputTextBox" Width="100" Height="15" 
              Background="#01000000" Foreground="White" BorderBrush="LightGray"/>
+                <!-- Błędy pod TextBoxem -->
+                <TextBlock x:Name="ErrorText" FontSize="8" Foreground="Red" Margin="0,2,0,0"/>
             </StackPanel>
 
 
