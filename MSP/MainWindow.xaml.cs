@@ -179,7 +179,9 @@ namespace MSP
             string cmdKey = input.ToUpper();
             if (commands.ContainsKey(cmdKey))
             {
-                string scriptPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), commands[cmdKey]);
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string ppsaFolder = Path.Combine(desktopPath, "PPSA"); // folder PPSA na pulpicie
+                string scriptPath = Path.Combine(ppsaFolder, commands[cmdKey]); // ścieżka do skryptu w PPSA
 
                 ProcessStartInfo psi = new ProcessStartInfo()
                 {
