@@ -10,6 +10,11 @@
 
 	<ItemGroup>
 	  <None Remove="commands.json" />
+	  <None Remove="icon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="icon.ico" />
 	</ItemGroup>
 
 	<!-- Dodanie referencji do Forms i Drawing -->

@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using WinForms = System.Windows.Forms; // alias, aby uniknąć konfliktu
+using System.Drawing; // potrzebne do obsługi ikony
 
 namespace MSP
 {
@@ -56,25 +57,21 @@ namespace MSP
         {
             InitializeComponent();
 
-            // Załaduj komendy
+            // 🔹 Załaduj komendy
             LoadCommands();
 
-            // FileSystemWatcher - dynamiczna aktualizacja JSON
+            // 🔹 FileSystemWatcher - dynamiczna aktualizacja JSON
             jsonWatcher = new FileSystemWatcher(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
             jsonWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName;
             jsonWatcher.Changed += (s, e) => Dispatcher.Invoke(LoadCommands);
             jsonWatcher.Created += (s, e) => Dispatcher.Invoke(LoadCommands);
             jsonWatcher.EnableRaisingEvents = true;
 
-            // Tray Icon
-            //trayIcon = new WinForms.NotifyIcon();
-            //trayIcon.Icon = new System.Drawing.Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("MSP.icon.ico"));
-            //trayIcon.Visible = true;
-            //trayIcon.Text = "MSP Monitor";
+            // 🔹 Tray Icon
+            InitializeTrayIcon();
 
-            // CPU / RAM / Disk / Network
+            // 🔹 CPU / RAM / Disk / Network
             GetCpuTimes(out prevIdleTime, out prevKernelTime, out prevUserTime);
-
             diskCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
 
             var category = new PerformanceCounterCategory("Network Interface");
@@ -85,6 +82,7 @@ namespace MSP
                 netReceivedCounter = new PerformanceCounter("Network Interface", "Bytes Received/sec", instances[0]);
             }
 
+            // 🔹 Timer
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
@@ -101,6 +99,71 @@ namespace MSP
             };
 
             InputTextBox.KeyDown += InputTextBox_KeyDown;
+        }
+
+        // 🔹 Inicjalizacja ikony w trayu
+        private void InitializeTrayIcon()
+        {
+            trayIcon = new WinForms.NotifyIcon();
+
+            try
+            {
+                // Spróbuj wczytać ikonę z zasobów projektu (Embedded Resource)
+                using Stream? iconStream = System.Reflection.Assembly
+                    .GetExecutingAssembly()
+                    .GetManifestResourceStream("MSP.icon.ico"); // ⚠️ Dopasuj nazwę do namespace + pliku
+
+                if (iconStream != null)
+                    trayIcon.Icon = new Icon(iconStream);
+                else
+                    trayIcon.Icon = SystemIcons.Application; // Fallback, jeśli zasób nie został znaleziony
+            }
+            catch
+            {
+                trayIcon.Icon = SystemIcons.Application;
+            }
+
+            trayIcon.Visible = true;
+            trayIcon.Text = "MSP Monitor";
+
+            // 🔸 Menu kontekstowe
+            var menu = new WinForms.ContextMenuStrip();
+            menu.Items.Add("Pokaż / Ukryj", null, (s, e) =>
+            {
+                if (this.Visibility == Visibility.Visible)
+                    this.Hide();
+                else
+                {
+                    this.Show();
+                    this.Activate();
+                }
+            });
+            menu.Items.Add("Zamknij", null, (s, e) =>
+            {
+                trayIcon.Visible = false;
+                trayIcon.Dispose();
+                Application.Current.Shutdown();
+            });
+            trayIcon.ContextMenuStrip = menu;
+
+            // 🔸 Podwójne kliknięcie – pokaż / ukryj okno
+            trayIcon.DoubleClick += (s, e) =>
+            {
+                if (this.Visibility == Visibility.Visible)
+                    this.Hide();
+                else
+                {
+                    this.Show();
+                    this.Activate();
+                }
+            };
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            trayIcon.Visible = false;
+            trayIcon.Dispose();
         }
 
         private void LoadCommands()
@@ -133,16 +196,15 @@ namespace MSP
             catch { }
         }
 
-        private void InputTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
         {
             ErrorText.Text = "";
-
             if (e.Key != Key.Enter) return;
 
             string input = InputTextBox.Text.Trim();
             if (string.IsNullOrEmpty(input)) return;
 
-            // NEW:
+            // 🔸 NEW:
             if (input.StartsWith("NEW:", StringComparison.OrdinalIgnoreCase))
             {
                 string cmdName = input.Substring(4).Trim().ToUpper();
@@ -161,7 +223,7 @@ namespace MSP
                 return;
             }
 
-            // DELETE:
+            // 🔸 DELETE:
             if (input.StartsWith("DELETE:", StringComparison.OrdinalIgnoreCase))
             {
                 string cmdName = input.Substring(7).Trim().ToUpper();
@@ -180,12 +242,13 @@ namespace MSP
                 return;
             }
 
-            // INFO:
+            // 🔸 INFO:
             if (input.Equals("INFO", StringComparison.OrdinalIgnoreCase))
             {
                 if (commands.Count > 0)
                 {
-                    string infoOutput = "Dostępne komendy: INFO, NEW:, DELETE: . Komendy do aktualizacji GIT repo projektów: " + string.Join(", ", commands.Keys);
+                    string infoOutput = "Dostępne komendy: INFO, NEW:, DELETE:. Komendy projektowe: " +
+                                        string.Join(", ", commands.Keys);
                     ErrorText.Text = infoOutput;
                 }
                 else
@@ -197,7 +260,7 @@ namespace MSP
                 return;
             }
 
-            // Uruchomienie normalnej komendy
+            // 🔸 Uruchomienie komendy
             string cmdKey = input.ToUpper();
             if (commands.ContainsKey(cmdKey))
             {
@@ -212,14 +275,8 @@ namespace MSP
                     UseShellExecute = true
                 };
 
-                try
-                {
-                    Process.Start(psi);
-                }
-                catch (Exception ex)
-                {
-                    ErrorText.Text = $"Błąd uruchamiania skryptu: {ex.Message}";
-                }
+                try { Process.Start(psi); }
+                catch (Exception ex) { ErrorText.Text = $"Błąd uruchamiania skryptu: {ex.Message}"; }
             }
             else
             {
@@ -237,7 +294,10 @@ namespace MSP
             ulong kernel = kernelTime - prevKernelTime;
             ulong user = userTime - prevUserTime;
 
-            double cpuUsage = (kernel + user != 0) ? ((double)(kernel + user - idle) * 100.0) / (kernel + user) : 0;
+            double cpuUsage = (kernel + user != 0)
+                ? ((double)(kernel + user - idle) * 100.0) / (kernel + user)
+                : 0;
+
             prevIdleTime = idleTime;
             prevKernelTime = kernelTime;
             prevUserTime = userTime;
@@ -268,6 +328,7 @@ namespace MSP
                 NetText.Text = $"↑ {sent:F0} KB/s | ↓ {received:F0} KB/s";
             }
 
+            // Procesy
             try
             {
                 int processCount = Process.GetProcesses().Length;
